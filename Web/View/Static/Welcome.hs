@@ -5,7 +5,6 @@ data WelcomeView = WelcomeView
 
 instance View WelcomeView where
     html WelcomeView = [hsx|
-        <h1>The Book App</h1>
-        <div class="elm">Elm app not loaded 💩</div>
-        <script src="elm/index.js"></script>
-    |]
+    <h1>The books app</h1>
+    <a href={BooksAction}>See all my books</a>
+|]

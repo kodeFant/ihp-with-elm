@@ -6,7 +6,8 @@
   "scripts": {
     "run-dev-elm": "parcel watch elm/index.js --out-dir static/elm",
     "run-dev-ihp": "./start",
-    "start": "concurrently --raw \"npm:run-dev-*\"",
+    "gen-types": "nix-shell --run './Application/Script/GenerateElmTypes.hs'",
+    "start": "npm run gen-types && concurrently --raw \"npm:run-dev-*\"",
     "build": "parcel build elm/index.js --out-dir static/elm"
   },
   "keywords": [],
