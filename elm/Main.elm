@@ -1,85 +1,80 @@
 module Main exposing (main)
 
-import Api.Generated exposing (Book, Widget(..), widgetDecoder)
+import Api.Generated exposing (Book, bookDecoder, widgetDecoder, Widget(..))
 import Browser
-import Html exposing (Html, div, h1, h2, p, pre, text)
+import Html exposing (..)
 import Json.Decode as D
+import Widget.Book
+import Widget.BookSearch
 
 
 type Model
-    = BookModel Book
+    = BookModel Widget.Book.Model
+    | BookSearchModel Widget.BookSearch.Model
     | ErrorModel String
 
 
 type Msg
-    = NoOp
+    = GotBookMsg Widget.Book.Msg
+    | GotBookSearchMsg Widget.BookSearch.Msg
+    | WidgetErrorMsg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        NoOp ->
+    case ( msg, model ) of
+        ( GotBookMsg subMsg, BookModel book ) ->
+            Widget.Book.update subMsg book
+                |> updateWith BookModel GotBookMsg model
+
+        ( GotBookSearchMsg subMsg, BookSearchModel subModel) ->
+            Widget.BookSearch.update subMsg subModel
+                |> updateWith BookSearchModel GotBookSearchMsg model
+
+
+        ( WidgetErrorMsg, ErrorModel _ ) ->
+            ( model, Cmd.none )
+
+        _ ->
             ( model, Cmd.none )
 
 
+updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg model ( subModel, subCmd ) =
+    ( toModel subModel
+    , Cmd.map toMsg subCmd
+    )
+
+
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
+subscriptions parentModel =
+    case parentModel of
+        BookModel book ->
+            Sub.map GotBookMsg (Widget.Book.subscriptions book)
+
+        BookSearchModel subModel ->
+            Sub.map GotBookSearchMsg (Widget.BookSearch.subscriptions subModel)
+
+        ErrorModel err ->
+            Sub.none
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
-    div []
-        [ text "<🌳>"
-        , widgetView model
-        , text "</🌳>"
-        ]
-
-
-widgetView : Model -> Html msg
-widgetView model =
     case model of
         ErrorModel errorMsg ->
             errorView errorMsg
 
+        BookSearchModel subModel ->
+            Html.map GotBookSearchMsg (Widget.BookSearch.view subModel)
+
         BookModel book ->
-            bookView book
+            Html.map GotBookMsg (Widget.Book.view book)
 
 
 errorView : String -> Html msg
 errorView errorMsg =
     pre [] [ text "Widget Error: ", text errorMsg ]
-
-
-bookView : Book -> Html msg
-bookView book =
-    div []
-        [ h2 [] [ text book.title ]
-        , p []
-            [ text "Pages: "
-            , book.pageCount |> String.fromInt |> text
-            ]
-        , p []
-            [ text
-                (if book.hasRead == True then
-                    "You have read this book"
-
-                 else
-                    "You have not read this book"
-                )
-            ]
-        , p [] [ showReview book.review ]
-        ]
-
-
-showReview : Maybe String -> Html msg
-showReview maybeReview =
-    case maybeReview of
-        Just review ->
-            text ("Your book review: " ++ review)
-
-        Nothing ->
-            text "You have not reviewed this book"
 
 
 main : Program D.Value Model Msg
@@ -114,3 +109,6 @@ widgetFlagToModel widget =
     case widget of
         BookWidget book ->
             BookModel book
+        
+        BookSearchWidget ->
+            BookSearchModel Widget.BookSearch.initialModel

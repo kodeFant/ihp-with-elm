@@ -4,6 +4,7 @@ module Application.Helper.View (
     -- To use the built in login:
     -- module IHP.LoginSupport.Helper.View
     bookWidget,
+    bookSearchWidget,
     Widget(..),
 ) where
 
@@ -18,6 +19,7 @@ import Language.Haskell.To.Elm
 
 data Widget
   = BookWidget BookJSON
+  | BookSearchWidget
   deriving ( Generic
            , Aeson.ToJSON
            , SOP.Generic
@@ -52,3 +54,8 @@ bookWidget book = [hsx|
 |]
     where
         bookData :: Widget  = BookWidget $ bookToJSON book
+
+bookSearchWidget :: Html
+bookSearchWidget = [hsx|
+    <div data-flags={encode BookSearchWidget} class="elm"></div>
+|]

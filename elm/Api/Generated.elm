@@ -10,18 +10,33 @@ import Time
 
 type Widget 
     = BookWidget Book
+    | BookSearchWidget 
 
 
 widgetEncoder : Widget -> Json.Encode.Value
 widgetEncoder a =
     case a of
         BookWidget b ->
-            bookEncoder b
+            Json.Encode.object [ ("tag" , Json.Encode.string "BookWidget")
+            , ("contents" , bookEncoder b) ]
+        
+        BookSearchWidget ->
+            Json.Encode.object [("tag" , Json.Encode.string "BookSearchWidget")]
 
 
 widgetDecoder : Json.Decode.Decoder Widget
 widgetDecoder =
-    Json.Decode.map BookWidget bookDecoder
+    Json.Decode.field "tag" Json.Decode.string |>
+    Json.Decode.andThen (\a -> case a of
+        "BookWidget" ->
+            Json.Decode.succeed BookWidget |>
+            Json.Decode.Pipeline.required "contents" bookDecoder
+        
+        "BookSearchWidget" ->
+            Json.Decode.succeed BookSearchWidget
+        
+        _ ->
+            Json.Decode.fail "No matching constructor")
 
 
 type alias Book  =
