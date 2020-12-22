@@ -8,8 +8,16 @@ import Web.View.Books.Show
 
 instance Controller BooksController where
     action BooksAction = do
-        books <- query @Book |> fetch
-        render IndexView { .. }
+        let maybeSearchParam :: Maybe Text = paramOrNothing "searchTerm"
+        case maybeSearchParam of
+            Nothing -> do
+                books <- query @Book |> fetch
+                render IndexView { .. }
+            Just searchTerm -> do
+                books <- sqlQuery
+                            "SELECT * FROM books WHERE title ILIKE ?"
+                            (Only ("%" ++ searchTerm ++ "%"))
+                render IndexView { .. }
 
     action NewBookAction = do
         let book = newRecord

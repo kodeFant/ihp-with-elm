@@ -1,5 +1,6 @@
 module Web.View.Books.Index where
 import Web.View.Prelude
+import Web.JsonTypes ( bookToJSON )
 
 data IndexView = IndexView { books :: [Book] }
 
@@ -25,6 +26,8 @@ instance View IndexView where
             </table>
         </div>
     |]
+
+    json IndexView {..} = toJSON (books |> map bookToJSON)
 
 
 renderBook book = [hsx|
