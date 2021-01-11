@@ -9,11 +9,6 @@ type alias Model =
     Book
 
 
-init : Book -> ( Model, Cmd msg )
-init book =
-    ( book, Cmd.none )
-
-
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
