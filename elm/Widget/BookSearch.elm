@@ -22,11 +22,6 @@ initialModel =
     }
 
 
-init : Model -> ( Model, Cmd msg )
-init model =
-    ( model, Cmd.none )
-
-
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
